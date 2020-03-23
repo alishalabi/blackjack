@@ -22,6 +22,23 @@ func (h Hand) DealerString() string {
   return h[0].String() + ", **Hidden**"
 }
 
+// MinScore calculates the minimum score for a hand (ie Ace equals 1)
+func (h Hand) MinScore() int {
+  score := 0
+  for _, c := range h {
+    score += min(int(c.Rank), 10) // Any rank higher than 10 will return 10
+  }
+  return score
+}
+
+// min is an internal helper function that helps convert Jack, Queen, King to value ten
+func min(a, b int) int {
+  if a < b {
+    return a
+  }
+  return b
+}
+
 // Draw takes the top card of the deck, then returns that card and a diminshed deck
 func draw(cards []deck.Card) (deck.Card, []deck.Card) {
   return cards[0], cards[1:]
@@ -54,8 +71,8 @@ func main() {
     }
   }
   fmt.Println("***Final Hands***")
-  fmt.Println("Player's final hand:", player)
-  fmt.Println("Dealer's final hand:", dealer)
+  fmt.Println("Player's final hand:", player, "\nScore:", player.MinScore())
+  fmt.Println("Dealer's final hand:", dealer, "\nScore:", dealer.MinScore())
 
 
 }
