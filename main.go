@@ -22,6 +22,19 @@ func (h Hand) DealerString() string {
   return h[0].String() + ", **Hidden**"
 }
 
+// Score returns score, with Aces having valiable values
+func (h Hand) Score() int {
+  minScore := h.MinScore()
+  if minscore > 11 { // 10 is the highest time we would want Ace == 11
+    return minScore
+  }
+  for _, c := range h {
+    if c.Rank == deck.Ace {
+      return minScore + 10 // Ace is already worth 1, adding 10 makes it work 10
+    }
+  }
+}
+
 // MinScore calculates the minimum score for a hand (ie Ace equals 1)
 func (h Hand) MinScore() int {
   score := 0
@@ -71,8 +84,8 @@ func main() {
     }
   }
   fmt.Println("***Final Hands***")
-  fmt.Println("Player's final hand:", player, "\nScore:", player.MinScore())
-  fmt.Println("Dealer's final hand:", dealer, "\nScore:", dealer.MinScore())
+  fmt.Println("Player's final hand:", player, "\nScore:", player.Score())
+  fmt.Println("Dealer's final hand:", dealer, "\nScore:", dealer.Score())
 
 
 }
