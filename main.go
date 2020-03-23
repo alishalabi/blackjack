@@ -25,7 +25,7 @@ func (h Hand) DealerString() string {
 // Score returns score, with Aces having valiable values
 func (h Hand) Score() int {
   minScore := h.MinScore()
-  if minscore > 11 { // 10 is the highest time we would want Ace == 11
+  if minScore > 11 { // 10 is the highest time we would want Ace == 11
     return minScore
   }
   for _, c := range h {
@@ -33,6 +33,7 @@ func (h Hand) Score() int {
       return minScore + 10 // Ace is already worth 1, adding 10 makes it work 10
     }
   }
+  return minScore
 }
 
 // MinScore calculates the minimum score for a hand (ie Ace equals 1)
@@ -79,13 +80,32 @@ func main() {
     case "h":
       card, cards = draw(cards)
       player = append(player, card)
-    default:
-      fmt.Println("Whoops, not a valid option. Please enter *h* to hit, or *s* to stand.")
+    // default:
+    //   fmt.Println("Whoops, not a valid option. Please enter *h* to hit, or *s* to stand.")
     }
   }
-  fmt.Println("***Final Hands***")
-  fmt.Println("Player's final hand:", player, "\nScore:", player.Score())
-  fmt.Println("Dealer's final hand:", dealer, "\nScore:", dealer.Score())
-
+  // Basic dealer AI
+  // Hit if dealer has less than 16, or a soft 17 (17 with high Ace)
+  for dealer.Score() <= 16 || (dealer.Score() == 17 && dealer.MinScore() != 17) {
+    card, cards = draw(cards)
+    dealer = append(dealer, card)
+    fmt.Println("Dealer draws:", card)
+  }
+  pScore, dScore := player.Score(), dealer.Score()
+  fmt.Println("\n***Final Hands***")
+  fmt.Println("Player's final hand:", player, "\nScore:", pScore)
+  fmt.Println("Dealer's final hand:", dealer, "\nScore:", dScore)
+  switch { // Calculate results
+  case pScore > 21:
+    fmt.Println("Player busts")
+  case dScore > 21:
+    fmt.Println("Dealer busts")
+  case pScore > dScore:
+    fmt.Println("Player wins")
+  case dScore > pScore:
+    fmt.Println("Dealer wins")
+  case pScore == dScore:
+    fmt.Println("Player and Dealer draw")
+  }
 
 }
