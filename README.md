@@ -4,8 +4,12 @@ The purpose of this project is to create a game of blackjack using a custom-buil
 This project utilizes the custom deck package that we created in a different repo: https://github.com/alishalabi/deck
 
 ## Installation
+- Clone locally using `git clone https://github.com/alishalabi/blackjack`
 
 ## Usage
+- Run game by entering terminal command `go run main.go`
+
+[![asciicast](https://asciinema.org/a/BudHbdCuqbfEvKtzxosQAgyEq.svg)](https://asciinema.org/a/BudHbdCuqbfEvKtzxosQAgyEq)
 
 ## Iterations
 Phase 1:
@@ -15,7 +19,7 @@ Phase 1:
 - [x] Allow user input to hit or stand
 - [x] Implement scoring
 - [x] Implement simple AI
-- [ ] Implement complete Gamestate refactor
+- [x] Implement complete GameState refactor
 
 Phase 2:
 

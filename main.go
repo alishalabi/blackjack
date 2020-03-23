@@ -74,7 +74,7 @@ type GameState struct {
 }
 
 // CurrentPlayer returns pointer to current player's hand
-func (gs *Gamestate) CurrentPlayer() *Hand {
+func (gs *GameState) CurrentPlayer() *Hand {
   switch gs.State {
   case StatePlayerTurn:
     return &gs.Player
@@ -96,61 +96,109 @@ func clone(gs GameState) GameState {
   }
 copy(ret.Deck, gs.Deck)
 copy(ret.Player, gs.Player)
-copy(re.Dealer, gs.Dealer)
+copy(ret.Dealer, gs.Dealer)
 return ret
+}
+
+// Shuffle resets the game deck
+func Shuffle(gs GameState) GameState {
+  ret := clone(gs)
+  ret.Deck = deck.New(deck.Deck(3), deck.Shuffle)
+  return ret
+}
+
+// Deal gives player and dealer new hands
+func Deal(gs GameState) GameState {
+  ret := clone(gs)
+  ret.Player = make(Hand, 0, 5)
+  ret.Dealer = make(Hand, 0, 5)
+  var card deck.Card
+  for i := 0; i < 2; i++ {
+    card, ret.Deck = draw(ret.Deck)
+    ret.Player = append(ret.Player, card)
+    card, ret.Deck = draw(ret.Deck)
+    ret.Dealer = append(ret.Dealer, card)
+  }
+  ret.State = StatePlayerTurn
+  return ret
+}
+
+// Hit gives the player or dealer one deck, removes that card from deck
+func Hit(gs GameState) GameState {
+  ret := clone(gs)
+  hand := ret.CurrentPlayer()
+  var card deck.Card
+  card, ret.Deck = draw(ret.Deck)
+  *hand = append(*hand, card)
+  if hand.Score() > 21 {
+    return Stand(ret)
+  }
+  return ret
+}
+
+func EndHand(gs GameState) GameState {
+  ret := clone(gs)
+  pScore, dScore := ret.Player.Score(), ret.Dealer.Score()
+  fmt.Println("\n***Final Hands***")
+  fmt.Println("Player's final hand:", ret.Player, "\nScore:", pScore)
+  fmt.Println("Dealer's final hand:", ret.Dealer, "\nScore:", dScore)
+  switch { // Calculate results
+  case pScore > 21:
+    fmt.Println("Player busts, dealer wins :(")
+  case dScore > 21:
+    fmt.Println("Dealer busts, player wins!")
+  case pScore > dScore:
+    fmt.Println("Player wins!")
+  case dScore > pScore:
+    fmt.Println("Dealer wins :(")
+  case pScore == dScore:
+    fmt.Println("Player and Dealer draw")
+  }
+  // Clear both hands
+  fmt.Println()
+  ret.Player = nil
+  ret.Dealer = nil
+  return ret
+}
+
+// Stand changes player/dealer's turn
+func Stand(gs GameState) GameState {
+  ret := clone(gs)
+  ret.State++ // Works b/c we used iota in states
+  return ret
 }
 
 func main() {
   var gs GameState
-  gs.Deck = deck.New(deck.Deck(3), deck.Shuffle)
+  gs = Shuffle(gs)
+  gs = Deal(gs)
 
-  // cards := deck.New(deck.Deck(3), deck.Shuffle)
-  // var card deck.Card
-  // var player, dealer Hand
-  // for i := 0; i < 2 ; i++ { // Draw two cards
-  //   for _, hand := range []*Hand{&player, &dealer} { // Using pointers to avoid "hand" copies
-  //     card, cards = draw(cards)
-  //     *hand = append(*hand, card)
-  //   }
-  // }
-  //
-  // // Game run logic
-  // var input string
-  // for input != "s" {
-  //   fmt.Println("Player's hand:", player)
-  //   fmt.Println("Dealer's hand:", dealer.DealerString())
-  //   fmt.Println("Player's choice: (h)it or (s)tand")
-  //   fmt.Scanf("%s\n", &input)
-  //   switch input {
-  //   case "h":
-  //     card, cards = draw(cards)
-  //     player = append(player, card)
-  //   // default:
-  //   //   fmt.Println("Whoops, not a valid option. Please enter *h* to hit, or *s* to stand.")
-  //   }
-  // }
-  // // Basic dealer AI
-  // // Hit if dealer has less than 16, or a soft 17 (17 with high Ace)
-  // for dealer.Score() <= 16 || (dealer.Score() == 17 && dealer.MinScore() != 17) {
-  //   card, cards = draw(cards)
-  //   dealer = append(dealer, card)
-  //   fmt.Println("Dealer draws:", card)
-  // }
-  // pScore, dScore := player.Score(), dealer.Score()
-  // fmt.Println("\n***Final Hands***")
-  // fmt.Println("Player's final hand:", player, "\nScore:", pScore)
-  // fmt.Println("Dealer's final hand:", dealer, "\nScore:", dScore)
-  // switch { // Calculate results
-  // case pScore > 21:
-  //   fmt.Println("Player busts")
-  // case dScore > 21:
-  //   fmt.Println("Dealer busts")
-  // case pScore > dScore:
-  //   fmt.Println("Player wins")
-  // case dScore > pScore:
-  //   fmt.Println("Dealer wins")
-  // case pScore == dScore:
-  //   fmt.Println("Player and Dealer draw")
-  // }
+  // // Game run logic for player
+  var input string
+  for gs.State == StatePlayerTurn {
+      fmt.Println("Player's hand:", gs.Player)
+      fmt.Println("Dealer's hand:", gs.Dealer.DealerString())
+      fmt.Println("Player's choice: (h)it or (s)tand")
+      fmt.Scanf("%s\n", &input)
+      switch input {
+      case "h":
+        gs = Hit(gs)
+      case "s":
+        gs = Stand(gs)
+      default:
+        fmt.Println("Whoops, not a valid option. Please enter *h* to hit, or *s* to stand.")
+      }
+  }
+
+  // Game logic for dealer
+  for gs.State == StateDealerTurn {
+    // Hit if dealer has less than 16, or a soft 17 (17 with high Ace)
+    if gs.Dealer.Score() <= 16 || (gs.Dealer.Score() == 17 && gs.Dealer.MinScore() != 17) {
+      gs = Hit(gs)
+    } else {
+      gs = Stand(gs )
+    }
+  }
+  gs = EndHand(gs)
 
 }
